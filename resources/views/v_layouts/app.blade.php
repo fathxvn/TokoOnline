@@ -39,6 +39,7 @@
     <!-- Custom stylesheet -->
     <link type="text/css" rel="stylesheet"
         href="{{ asset('frontend/css/style.css') }}">
+    <link type="text/css" rel="stylesheet" href="{{ asset('frontend/css/custom.css') }}">
 
     <!-- HTML5 shim and Respond.js for IE8 support of HTML5 elements and media queries -->
     <!-- WARNING: Respond.js doesn't work if you view the page via file:// -->
@@ -110,14 +111,14 @@
 
 @if (Auth::check())
 <!-- Account -->
- <li class="header-account dropdown default-dropdown"> 
-    <div class="dropdown-toggle" role="button" data-toggle="dropdown" aria-expanded="true"> 
-        <div class="header-btns-icon"> <i class="fa fa-user-o"></i> 
-    </div> <strong class="text-uppercase">{{ Auth::user()->nama }}<i class="fa fa-caret-down"></i></strong> 
-</div> 
-<ul class="custom-menu"> 
-    <li><a href="{{ route('customer.akun', ['id' => Auth::user()->id]) }}"><i class="fa fa-user-o"></i> Akun Saya</a> 
-</li> 
+ <li class="header-account dropdown default-dropdown">
+    <div class="dropdown-toggle" role="button" data-toggle="dropdown" aria-expanded="true">
+        <div class="header-btns-icon"> <i class="fa fa-user-o"></i>
+    </div> <strong class="text-uppercase">{{ Auth::user()->nama }}<i class="fa fa-caret-down"></i></strong>
+</div>
+<ul class="custom-menu">
+    <li><a href="{{ route('customer.akun', ['id' => Auth::user()->id]) }}"><i class="fa fa-user-o"></i> Akun Saya</a>
+</li>
 <li><a href="#"><i class="fa fa-check"></i> History</a></li> <li> <a href="#" onclick="event.preventDefault(); document.getElementById('keluar-app').submit();"><i class="fa fa-power-off"></i> Keluar </a> <!-- form keluar app --> <form id="keluar-app" action="{{ route('logout') }}" method="POST" class="d-none"> @csrf </form> <!-- form keluar app end --> </li> </ul> </li> @else <li class="header-account dropdown default-dropdown"> <div class="dropdown-toggle" role="button" data-toggle="dropdown" aria-expanded="true"> <div class="header-btns-icon"> <i class="fa fa-user-o"></i> </div> <strong class="text-uppercase">Akun Saya<i class="fa fa-caret-down"></i></strong> </div> <a href="{{ route('auth.redirect') }}" class="text-uppercase">Login</a> </li> <!-- /Account --> @endif
 
                         <!-- Mobile nav toggle -->
@@ -140,103 +141,63 @@
 
     </header>
     <!-- /HEADER -->
-    <!-- NAVIGATION -->
-    <div id="navigation">
-        <!-- container -->
-        <div class="container">
-            <div id="responsive-nav">
-                @if (request()->segment(1) == '' || request()->segment(1) == 'beranda')
-                    <!-- category nav -->
-                    <div class="category-nav">
-                        <span class="category-header">
-                            Kategori
-                            <i class="fa fa-list"></i>
-                        </span>
-                        <ul class="category-list">
-                            <div id="responsive-nav">
-                            @php
-                                $kategori = DB::table('kategori')
-                                    ->orderBy('nama_kategori', 'asc')
-                                    ->get();
-                            @endphp
-                            @foreach (DB::table('kategori')->orderBy('nama_kategori', 'asc')->get() as $row)
-                                <li>
-                                    <a href="{{ route('produk.kategori', $row->id) }}">
-                                        {{ $row->nama_kategori }}
-                                    </a>
-                                </li>
-                            @endforeach
+<!-- NAVIGATION -->
+@php
+    $isBeranda = request()->segment(1) == ''
+        || request()->segment(1) == 'beranda';
 
-                        </ul>
+    $kategori = DB::table('kategori')
+        ->orderBy('nama_kategori', 'asc')
+        ->get();
+@endphp
 
-                    </div>
-                    <!-- /category nav -->
+<div id="navigation">
+    <div class="container">
+        <div id="responsive-nav">
 
-                @else
+            <!-- Kategori -->
+            <div class="category-nav {{ $isBeranda ? '' : 'show-on-click' }}">
+                <span class="category-header">
+                    Kategori <i class="fa fa-list"></i>
+                </span>
 
-                    <!-- category nav -->
-                    <div class="category-nav show-on-click">
-
-                        <span class="category-header">
-                            Kategori
-                            <i class="fa fa-list"></i>
-                        </span>
-
-                        <ul class="category-list">
-
-                            @foreach (DB::table('kategori')->orderBy('nama_kategori', 'asc')->get() as $row)
-
-                                <li>
-                                    <a href="{{ route('produk.kategori', $row->id) }}">
-                                        {{ $row->nama_kategori }}
-                                    </a>
-                                </li>
-
-                            @endforeach
-
-                        </ul>
-
-                    </div>
-                    <!-- /category nav -->
-
-                @endif
-                <!-- menu nav -->
-                <div class="menu-nav">
-                    <span class="menu-header">
-                        Menu
-                        <i class="fa fa-bars"></i>
-                    </span>
-                    <ul class="menu-list">
+                <ul class="category-list">
+                    @foreach ($kategori as $navKategori)
                         <li>
-                            <a href="{{ route('beranda') }}">
-                                Beranda
+                            <a href="{{ route('produk.kategori', $navKategori->id) }}">
+                                {{ $navKategori->nama_kategori }}
                             </a>
                         </li>
-                        <li>
-                            <a href="{{ route('produk.all') }}">
-                                Produk
-                            </a>
-                        </li>
-
-                        <li>
-                            <a href="#">
-                                Lokasi
-                            </a>
-                        </li>
-
-                        <li>
-                            <a href="#">
-                                Hubungi Kami
-                            </a>
-                        </li>
-                    </ul>
-                </div>
-                <!-- /menu nav -->
+                    @endforeach
+                </ul>
             </div>
+
+            <!-- Menu -->
+            <div class="menu-nav">
+                <span class="menu-header">
+                    Menu <i class="fa fa-bars"></i>
+                </span>
+
+                <ul class="menu-list">
+                    <li>
+                        <a href="{{ route('beranda') }}">Beranda</a>
+                    </li>
+                    <li>
+                        <a href="{{ route('produk.all') }}">Produk</a>
+                    </li>
+                    <li>
+                        <a href="#">Lokasi</a>
+                    </li>
+                    <li>
+                        <a href="#">Hubungi Kami</a>
+                    </li>
+                </ul>
+            </div>
+
         </div>
-        <!-- /container -->
     </div>
-    <!-- /NAVIGATION -->
+</div>
+<!-- /NAVIGATION -->
 
     @if (request()->segment(1) == '' || request()->segment(1) == 'beranda')
 
@@ -261,7 +222,7 @@
 
                                 <h1>Jajanan Tradisional</h1>
 
-                                <h3 class="font-weak" style="color: 30323a;">
+                                <h3 class="font-weak" style="color: #30323a;">
                                     Khas Makanan Indonesia
                                 </h3>
 
@@ -307,7 +268,7 @@
 
                             <div class="banner-caption">
 
-                                <h1 style="color: f8694a;">
+                                <h1 style="color: #f8694a;">
                                     Khas Makanan
                                     <span>Indonesia</span>
                                 </h1>
@@ -345,113 +306,26 @@
             <div class="row">
 
                 <!-- ASIDE -->
-                <div id="aside" class="col-md-3">
+<div id="aside" class="col-md-3">
+    <div class="aside">
+        <h3 class="aside-title">Filter Kategori</h3>
 
-                    <!-- aside widget -->
-                    <div class="aside">
+        <ul class="list-links">
+            <li>
+                <a href="{{ route('produk.all') }}">Semua Produk</a>
+            </li>
 
-                        <h3 class="aside-title">
-                            Top Rated Product
-                        </h3>
-
-                        <!-- widget product -->
-                        <div class="product product-widget">
-
-                            <div class="product-thumb">
-                                <img src="{{ asset('frontend/img/thumb-product01.jpg') }}" alt="">
-                            </div>
-
-                            <div class="product-body">
-
-                                <h2 class="product-name">
-                                    <a href="#">
-                                        Product Name Goes Here
-                                    </a>
-                                </h2>
-
-                                <h3 class="product-price">
-                                    $32.50
-                                    <del class="product-old-price">
-                                        $45.00
-                                    </del>
-                                </h3>
-
-                                <div class="product-rating">
-                                    <i class="fa fa-star"></i>
-                                    <i class="fa fa-star"></i>
-                                    <i class="fa fa-star"></i>
-                                    <i class="fa fa-star"></i>
-                                    <i class="fa fa-star-o empty"></i>
-                                </div>
-
-                            </div>
-
-                        </div>
-                        <!-- /widget product -->
-
-
-                        <!-- widget product -->
-                        <div class="product product-widget">
-
-                            <div class="product-thumb">
-                                <img src="{{ asset('frontend/img/thumb-product01.jpg') }}" alt="">
-                            </div>
-
-                            <div class="product-body">
-
-                                <h2 class="product-name">
-                                    <a href="#">
-                                        Product Name Goes Here
-                                    </a>
-                                </h2>
-
-                                <h3 class="product-price">
-                                    $32.50
-                                </h3>
-
-                                <div class="product-rating">
-                                    <i class="fa fa-star"></i>
-                                    <i class="fa fa-star"></i>
-                                    <i class="fa fa-star"></i>
-                                    <i class="fa fa-star"></i>
-                                    <i class="fa fa-star-o empty"></i>
-                                </div>
-
-                            </div>
-
-                        </div>
-                        <!-- /widget product -->
-
-                    </div>
-                    <!-- /aside widget -->
-
-
-                    <!-- aside widget -->
-                    <div class="aside">
-
-                        <h3 class="aside-title">
-                            Filter Kategori
-                        </h3>
-
-                        <ul class="list-links">
-
-                            @foreach (DB::table('kategori')->orderBy('nama_kategori', 'asc')->get() as $row)
-
-                                <li>
-                                    <a href="{{ route('produk.kategori', $row->id) }}">
-                                        {{ $row->nama_kategori }}
-                                    </a>
-                                </li>
-
-                            @endforeach
-
-                        </ul>
-
-                    </div>
-                    <!-- /aside widget -->
-
-                </div>
-                <!-- /ASIDE -->
+            @foreach ($kategori as $item)
+                <li>
+                    <a href="{{ route('produk.kategori', $item->id) }}">
+                        {{ $item->nama_kategori }}
+                    </a>
+                </li>
+            @endforeach
+        </ul>
+    </div>
+</div>
+<!-- /ASIDE -->
 
 
                 <!-- MAIN -->
@@ -494,233 +368,82 @@
 
 
     <!-- FOOTER -->
-    <footer id="footer" class="section section-grey">
-
-        <!-- container -->
-        <div class="container">
-
-            <!-- row -->
-            <div class="row">
-
-                <!-- footer widget -->
-                <div class="col-md-3 col-sm-6 col-xs-6">
-
-                    <div class="footer">
-
-                        <!-- footer logo -->
-                        <div class="footer-logo">
-
-                            <a class="logo" href="#">
-                                <img src="{{ asset('image/logo.png') }}" alt="">
-                            </a>
-
-                        </div>
-                        <!-- /footer logo -->
-
-
-                        <p>
-                            Lorem ipsum dolor sit amet, consectetur adipisicing elit,
-                            sed do eiusmod tempor incididunt ut labore et dolore magna
-                        </p>
-
-
-                        <!-- footer social -->
-                        <ul class="footer-social">
-
-                            <li>
-                                <a href="#">
-                                    <i class="fa fa-facebook"></i>
-                                </a>
-                            </li>
-
-                            <li>
-                                <a href="#">
-                                    <i class="fa fa-twitter"></i>
-                                </a>
-                            </li>
-
-                            <li>
-                                <a href="#">
-                                    <i class="fa fa-instagram"></i>
-                                </a>
-                            </li>
-
-                            <li>
-                                <a href="#">
-                                    <i class="fa fa-google-plus"></i>
-                                </a>
-                            </li>
-
-                            <li>
-                                <a href="#">
-                                    <i class="fa fa-pinterest"></i>
-                                </a>
-                            </li>
-
-                        </ul>
-                        <!-- /footer social -->
-
-                    </div>
-
-                </div>
-                <!-- /footer widget -->
-
-
-                <!-- footer widget -->
-                <div class="col-md-3 col-sm-6 col-xs-6">
-
-                    <div class="footer">
-
-                        <h3 class="footer-header">
-                            My Account
-                        </h3>
-
-                        <ul class="list-links">
-
-                            <li>
-                                <a href="#">My Account</a>
-                            </li>
-
-                            <li>
-                                <a href="#">My Wishlist</a>
-                            </li>
-
-                            <li>
-                                <a href="#">Compare</a>
-                            </li>
-
-                            <li>
-                                <a href="#">Checkout</a>
-                            </li>
-
-                            <li>
-                                <a href="#">Login</a>
-                            </li>
-
-                        </ul>
-
-                    </div>
-
-                </div>
-                <!-- /footer widget -->
-
-
-                <div class="clearfix visible-sm visible-xs"></div>
-
-
-                <!-- footer widget -->
-                <div class="col-md-3 col-sm-6 col-xs-6">
-
-                    <div class="footer">
-
-                        <h3 class="footer-header">
-                            Customer Service
-                        </h3>
-
-                        <ul class="list-links">
-
-                            <li>
-                                <a href="#">About Us</a>
-                            </li>
-
-                            <li>
-                                <a href="#">Shiping & Return</a>
-                            </li>
-
-                            <li>
-                                <a href="#">Shiping Guide</a>
-                            </li>
-
-                            <li>
-                                <a href="#">FAQ</a>
-                            </li>
-
-                        </ul>
-
-                    </div>
-
-                </div>
-                <!-- /footer widget -->
-
-
-                <!-- footer subscribe -->
-                <div class="col-md-3 col-sm-6 col-xs-6">
-
-                    <div class="footer">
-
-                        <h3 class="footer-header">
-                            Stay Connected
-                        </h3>
-
-                        <p>
-                            Lorem ipsum dolor sit amet, consectetur adipisicing elit,
-                            sed do eiusmod tempor.
-                        </p>
-
-                        <form>
-
-                            <div class="form-group">
-                                <input class="input" placeholder="Enter Email Address">
-                            </div>
-
-                            <button class="primary-btn">
-                                Join Newslatter
-                            </button>
-
-                        </form>
-
-                    </div>
-
-                </div>
-                <!-- /footer subscribe -->
-
-            </div>
-            <!-- /row -->
-
-
-            <hr>
-
-
-            <!-- row -->
-            <div class="row">
-
-                <div class="col-md-8 col-md-offset-2 text-center">
-
-                    <!-- footer copyright -->
-                    <div class="footer-copyright">
-
-                        <!-- Link back to Colorlib can't be removed.
-                             Template is licensed under CC BY 3.0. -->
-
-                        Copyright &copy;
-                        <script>
-                            document.write(new Date().getFullYear());
-                        </script>
-
-                        All rights reserved |
-                        This template is made with
-                        <i class="fa fa-heart-o" aria-hidden="true"></i>
-                        by
-                        <a href="https://colorlib.com" target="_blank">
-                            Colorlib
+<footer id="footer" class="section section-grey">
+    <div class="container">
+        <div class="row">
+
+            <!-- Informasi toko -->
+            <div class="col-sm-4 col-xs-12">
+                <div class="footer">
+                    <div class="footer-logo">
+                        <a class="logo" href="{{ route('beranda') }}">
+                            <img
+                                src="{{ asset('image/logo.png') }}"
+                                alt="Logo Toko Online">
                         </a>
-
-                        <!-- Link back to Colorlib can't be removed.
-                             Template is licensed under CC BY 3.0. -->
-
                     </div>
-                    <!-- /footer copyright -->
 
+                    <p>
+                        Lihat pilihan produk dan detailnya,
+                        lalu tambahkan produk ke keranjang belanja.
+                    </p>
                 </div>
-
             </div>
-            <!-- /row -->
+
+            <!-- Navigasi -->
+            <div class="col-sm-4 col-xs-12">
+                <div class="footer">
+                    <h3 class="footer-header">Navigasi</h3>
+
+                    <ul class="list-links">
+                        <li>
+                            <a href="{{ route('beranda') }}">Beranda</a>
+                        </li>
+                        <li>
+                            <a href="{{ route('produk.all') }}">Semua Produk</a>
+                        </li>
+                        <li>
+                            <a href="{{ route('order.cart') }}">Keranjang</a>
+                        </li>
+                    </ul>
+                </div>
+            </div>
+
+            <!-- Kategori -->
+            <div class="col-sm-4 col-xs-12">
+                <div class="footer">
+                    <h3 class="footer-header">Kategori Produk</h3>
+
+                    <ul class="list-links">
+                        @foreach ($kategori as $item)
+                            <li>
+                                <a href="{{ route('produk.kategori', $item->id) }}">
+                                    {{ $item->nama_kategori }}
+                                </a>
+                            </li>
+                        @endforeach
+                    </ul>
+                </div>
+            </div>
 
         </div>
-        <!-- /container -->
 
-    </footer>
-    <!-- /FOOTER -->
+        <hr>
+
+        <div class="footer-copyright text-center">
+            Copyright &copy; {{ date('Y') }} Toko Online.
+            All rights reserved |
+            This template is made with
+            <i class="fa fa-heart-o" aria-hidden="true"></i>
+            by
+            <a href="https://colorlib.com"
+                target="_blank" rel="noopener noreferrer">
+                Colorlib
+            </a>
+        </div>
+    </div>
+</footer>
+<!-- /FOOTER -->
 
 
     <!-- jQuery Plugins -->

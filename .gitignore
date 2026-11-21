@@ -33,3 +33,4 @@ Thumbs.db
 
 # Client seed data contains local account credentials.
 /database/seeders/DatabaseSeeder.php
+*:Zone.Identifier

@@ -28,7 +28,7 @@ class CartTest extends StorefrontTestCase
         $this->get('/cart')->assertOk()->assertSee('Rp. 45.000')->assertSee('750 Gram')
             ->assertSee('action="'.route('order.updateQuantity', $item->id).'"', false)
             ->assertSee('action="'.route('order.removeItem', $item->id).'"', false)
-            ->assertSee('disabled', false)->assertDontSee('action="#"', false);
+            ->assertDontSee('action="#"', false);
         $this->delete(route('order.removeItem', $item->id))->assertRedirect(route('order.cart'));
         $this->assertDatabaseCount('order_item', 0);
         $this->assertDatabaseHas('order', ['id' => $order->id, 'total_harga' => 0, 'total_berat' => 0]);

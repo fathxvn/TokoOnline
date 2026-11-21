@@ -88,3 +88,40 @@
     max-width: 100%;
     height: auto;
 }
+
+/* profil customer */
+.customer-account .foto-preview {
+    display: block;
+    width: 100%;
+    max-width: 240px;
+    height: 240px;
+    margin: 0 auto 15px;
+    object-fit: cover;
+    border: 1px solid #ddd;
+    border-radius: 4px;
+}
+
+.customer-account textarea {
+    resize: vertical;
+}
+
+.customer-account .account-actions {
+    margin-top: 20px;
+    margin-bottom: 25px;
+}
+
+
+/* Keranjang, checkout, dan riwayat: Bootstrap 3, tanpa CSS backend. */
+.store-order { min-width: 0; overflow-wrap: anywhere; }
+.store-order .table-responsive { max-width: 100%; margin-bottom: 20px; }
+.store-order .shopping-cart-table { min-width: 640px; }
+.store-order .order-items { min-width: 580px; }
+.store-order .shopping-cart-table .qty input { min-width: 65px; max-width: 100px; }
+.store-order .order-actions { display: flex; flex-wrap: wrap; gap: 10px; margin: 20px 0; }
+.store-order .integration-notice { margin-top: 20px; }
+.store-order dd { margin-bottom: 10px; }
+.store-order fieldset[disabled] { opacity: .75; }
+@media (max-width: 480px) {
+    .store-order .title { font-size: 20px; overflow-wrap: anywhere; }
+    .store-order .primary-btn, .store-order .main-btn { white-space: normal; }
+}

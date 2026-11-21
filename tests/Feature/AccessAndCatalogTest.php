@@ -32,14 +32,21 @@ class AccessAndCatalogTest extends StorefrontTestCase
 
     public function test_customer_cannot_access_any_backend_or_product_photo_endpoint(): void
     {
-        $this->actingAs($this->makeUser());
+        // Existing model bindings must resolve before the role middleware is exercised.
+        $customer = $this->makeCustomer();
+        $order = $this->makeOrder($customer, $this->makeProduct());
+        $this->actingAs($customer->user);
         foreach ($this->app['router']->getRoutes() as $route) {
             $uri = $route->uri();
             if ((!str_starts_with($uri, 'backend/') && !str_starts_with($uri, 'foto-produk/'))
                 || in_array($uri, ['backend/login', 'backend/logout'], true)) {
                 continue;
             }
-            $url = '/'.preg_replace('/\{[^}]+\}/', '1', $uri);
+            $url = '/'.preg_replace_callback('/\{([^}]+)\}/', fn ($match) => match ($match[1]) {
+                'customer' => (string) $customer->id,
+                'order' => (string) $order->id,
+                default => '1',
+            }, $uri);
             $this->call($route->methods()[0], $url)->assertForbidden();
         }
     }
@@ -81,17 +88,20 @@ class AccessAndCatalogTest extends StorefrontTestCase
         $this->actingAs($this->makeUser(['role' => '1']))->get('/cart')->assertForbidden();
     }
 
-    public function test_backend_customer_exposes_only_the_existing_index_action(): void
+    public function test_backend_customer_preserves_manual_management_actions_and_has_no_create_action(): void
     {
-        $this->makeCustomer();
+        $customer = $this->makeCustomer();
         $this->actingAs($this->makeUser(['role' => '0']));
-        $this->get('/backend/customer')->assertOk()->assertDontSee('<th>Aksi</th>', false)->assertDontSee('action="#"', false);
+        $this->get('/backend/customer')->assertOk();
         $this->get('/backend/customer/create')->assertNotFound();
-        $this->get('/backend/customer/1')->assertNotFound();
-        $this->get('/backend/customer/1/edit')->assertNotFound();
+        $this->get(route('backend.customer.show', $customer))->assertOk();
+        $this->get(route('backend.customer.edit', $customer))->assertOk();
         $this->post('/backend/customer')->assertStatus(405);
-        $this->put('/backend/customer/1')->assertNotFound();
-        $this->delete('/backend/customer/1')->assertNotFound();
+        $this->put(route('backend.customer.update', $customer), [
+            'nama' => 'Customer diperbarui', 'email' => $customer->user->email, 'hp' => '081234567890',
+            'alamat' => 'Alamat', 'pos' => '12345', 'status' => '1', 'role' => '1',
+        ])->assertRedirect(route('backend.customer.index'));
+        $this->assertDatabaseHas('user', ['id' => $customer->user_id, 'nama' => 'Customer diperbarui', 'role' => '2']);
     }
 
     public function test_catalog_reuses_existing_view_with_working_pagination_and_active_products_only(): void

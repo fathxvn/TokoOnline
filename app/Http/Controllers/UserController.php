@@ -4,6 +4,9 @@ namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
 use App\Models\User;
+use App\Models\Customer;
+use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\File;
 use Illuminate\Support\Facades\Hash;
 use App\Helpers\ImageHelper;
 
@@ -151,16 +154,18 @@ class UserController extends Controller
      */
     public function destroy(string $id)
     {
-        $user = user::findOrFail($id);
-        if ($user->foto) {
-            $oldImagePath = public_path('storage/img-user/') . $user->foto;
-            if (file_exists($oldImagePath)) {
-                unlink($oldImagePath);
-            }
-        }
-        $user->delete();
+        $photo = DB::transaction(function () use ($id) {
+            // Same customer -> user locking order as CustomerController::destroy.
+            Customer::where('user_id', $id)->lockForUpdate()->first();
+            $user = User::whereKey($id)->lockForUpdate()->firstOrFail();
+            $photo = $user->foto;
+            $user->delete(); // Model guard rejects every referenced account before changes/files.
+            return $photo;
+        });
+        if ($photo) File::delete(public_path('storage/img-user/'.basename($photo)));
         return redirect()->route('backend.user.index')->with('success', 'Data berhasil dihapus');
     }
+
 
     public function formUser()
     {

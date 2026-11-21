@@ -17,6 +17,18 @@ class User extends Authenticatable
      *
      * @var array<int, string>
      */
+    protected static function booted(): void
+    {
+        static::deleting(function ($user) {
+            if (Customer::where('user_id', $user->id)->exists()
+                || Order::where('user_id', $user->id)->exists()) {
+                throw \Illuminate\Validation\ValidationException::withMessages([
+                    'user' => 'User terkait customer, pesanan, atau pembayaran dan tidak dapat dihapus. Gunakan status Nonaktif.',
+                ]);
+            }
+        });
+    }
+
     protected $table = "user";
     protected $fillable = [
         'nama',

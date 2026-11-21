@@ -155,6 +155,9 @@
                 <!-- Sidebar navigation-->
                 <nav class="sidebar-nav">
                     <ul id="sidebarnav" class="p-t-30">
+                        <li class="sidebar-item"><a class="sidebar-link" href="{{ route('backend.customer.index') }}"><i class="mdi mdi-account"></i><span class="hide-menu">Customer</span></a></li>
+                        <li class="sidebar-item"><a class="sidebar-link" href="{{ route('backend.pesanan.index') }}"><i class="mdi mdi-basket"></i><span class="hide-menu">Pesanan</span></a></li>
+                        <li class="sidebar-item"><a class="sidebar-link" href="{{ route('backend.pesanan.chart') }}"><i class="mdi mdi-chart-bar"></i><span class="hide-menu">Grafik Pesanan</span></a></li>
                         <li class="sidebar-item"> <a class="sidebar-link waves-effect waves-dark sidebar-link" href="{{ route('backend.beranda') }} " aria-expanded="false"><i class="mdi mdi-view-dashboard"></i><span class="hide-menu">Beranda</span></a>
                         </li>
                         <li class="sidebar-item"> <a class="sidebar-link waves-effect waves-dark sidebar-link" href="{{ route('backend.user.index') }}" aria-expanded="false"><i class="mdi mdi-account"></i><span class="hide-menu">User</span></a>
@@ -304,10 +307,7 @@
                 cancelButtonText: 'Batal'
             }).then((result) => {
                 if (result.isConfirmed) {
-                    Swal.fire('Terhapus!', 'Data berhasil dihapus.', 'success')
-                        .then(() => {
-                            form.submit();
-                        });
+                    form.submit();
                 }
             });
         });
@@ -337,6 +337,7 @@
             });
     </script>
 
+    @stack('scripts')
 </body>
 
 </html>

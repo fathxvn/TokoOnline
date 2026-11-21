@@ -7,6 +7,9 @@ use App\Models\Produk;
 use App\Models\Kategori;
 use App\Models\FotoProduk;
 use App\Helpers\ImageHelper;
+use App\Models\OrderItem;
+use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\File;
 
 class ProdukController extends Controller
 {
@@ -46,7 +49,7 @@ class ProdukController extends Controller
             'detail' => 'required',
             'harga' => 'required',
             'berat' => 'required',
-            'stok' => 'required',
+            'stok' => 'required|integer|min:0',
             'foto' => 'required|image|mimes:jpeg,jpg,png,gif|file|max:1024',
         ], $messages = [
             'foto.image' => 'Format gambar gunakan file dengan ekstensi jpeg, jpg, png, atau gif.',
@@ -118,6 +121,19 @@ class ProdukController extends Controller
      */
     public function update(Request $request, string $id)
     {
+        return DB::transaction(function () use ($request, $id) {
+            Produk::whereKey($id)->lockForUpdate()->firstOrFail();
+            if (\Illuminate\Support\Facades\Schema::hasTable('payment_reservations')) {
+                $reserved = DB::table('payment_reservations')->join('payment_attempts', 'payment_attempts.id', '=', 'payment_reservations.payment_attempt_id')
+                    ->where('produk_id', $id)->where('stock_state', 'reserved')->exists();
+                abort_if($reserved, 409, 'Produk memiliki reservasi pembayaran aktif. Sinkronkan pembayaran sebelum mengubah produk atau stok.');
+            }
+            return $this->updateProduct($request, $id);
+        });
+    }
+
+    private function updateProduct(Request $request, string $id)
+    {
         //ddd($request);
         $produk = Produk::findOrFail($id);
         $rules = [
@@ -127,7 +143,7 @@ class ProdukController extends Controller
             'detail' => 'required',
             'harga' => 'required',
             'berat' => 'required',
-            'stok' => 'required',
+            'stok' => 'required|integer|min:0',
             'foto' => 'image|mimes:jpeg,jpg,png,gif|file|max:1024',
         ];
         $messages = [
@@ -191,46 +207,35 @@ class ProdukController extends Controller
      */
     public function destroy($id)
     {
-        $produk = Produk::findOrFail($id);
-        $directory = public_path('storage/img-produk/');
-
-        if ($produk->foto) {
-            // Hapus gambar asli
-            $oldImagePath = $directory . $produk->foto;
-            if (file_exists($oldImagePath)) {
-                unlink($oldImagePath);
+        $paths = DB::transaction(function () use ($id) {
+            // Cart additions also lock this product before inserting order_item.
+            $produk = Produk::whereKey($id)->lockForUpdate()->firstOrFail();
+            if (OrderItem::where('produk_id', $produk->id)->lockForUpdate()->first()) {
+                return null;
             }
 
-            // Hapus thumbnail lg
-            $thumbnailLg = $directory . 'thumb_lg_' . $produk->foto;
-            if (file_exists($thumbnailLg)) {
-                unlink($thumbnailLg);
+            $directory = public_path('storage/img-produk/');
+            $paths = [];
+            if ($produk->foto) {
+                foreach (['', 'thumb_lg_', 'thumb_md_', 'thumb_sm_'] as $prefix) {
+                    $paths[] = $directory.$prefix.$produk->foto;
+                }
             }
+            foreach (FotoProduk::where('produk_id', $produk->id)->get() as $foto) {
+                $paths[] = $directory.$foto->foto;
+                $foto->delete();
+            }
+            $produk->delete();
 
-            // Hapus thumbnail md
-            $thumbnailMd = $directory . 'thumb_md_' . $produk->foto;
-            if (file_exists($thumbnailMd)) {
-                unlink($thumbnailMd);
-            }
+            return $paths;
+        });
 
-            // Hapus thumbnail sm
-            $thumbnailSm = $directory . 'thumb_sm_' . $produk->foto;
-            if (file_exists($thumbnailSm)) {
-                unlink($thumbnailSm);
-            }
+        if ($paths === null) {
+            return redirect()->route('backend.produk.index')->with('msgError',
+                'Produk sudah digunakan dalam pesanan dan tidak dapat dihapus. Gunakan status Blok.');
         }
-
-        // Hapus foto produk lainnya di tabel foto_produk
-        $fotoProduks = FotoProduk::where('produk_id', $id)->get();
-        foreach ($fotoProduks as $fotoProduk) {
-            $fotoPath = $directory . $fotoProduk->foto;
-            if (file_exists($fotoPath)) {
-                unlink($fotoPath);
-            }
-            $fotoProduk->delete();
-        }
-
-        $produk->delete();
+        // Remove files only after the database transaction has committed.
+        File::delete($paths);
 
         return redirect()->route('backend.produk.index')->with('success', 'Data berhasil dihapus');
     }

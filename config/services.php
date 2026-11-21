@@ -37,4 +37,22 @@ return [
         'redirect' => env('GOOGLE_REDIRECT_URL'), 
     ],
 
+    'rajaongkir' => [
+    'api_key' => env('RAJAONGKIR_API_KEY'),
+    'origin_district' => env('RAJAONGKIR_ORIGIN_DISTRICT'),
+    // Configure only couriers enabled for the account; no courier is assumed.
+    'couriers' => array_values(array_filter(explode(':', env('RAJAONGKIR_COURIERS', '')))),
+    'base_url' => env(
+        'RAJAONGKIR_BASE_URL',
+        'https://rajaongkir.komerce.id/api/v1'
+        ),
+    ],
+
+    'midtrans' => [
+    'merchant_id' => env('MIDTRANS_MERCHANT_ID'),
+    'client_key' => env('MIDTRANS_CLIENT_KEY'),
+    'server_key' => env('MIDTRANS_SERVER_KEY'),
+    'is_production' => env('MIDTRANS_IS_PRODUCTION', false),
+    ],
+
 ];

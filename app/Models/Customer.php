@@ -36,12 +36,17 @@ class Customer extends Authenticatable
     { 
         parent::boot(); 
  
-        static::deleting(function ($customer) { 
-            // Hapus user yang terkait ketika customer dihapus 
-            if ($customer->user) { 
-                $customer->user->delete(); 
-            } 
-        }); 
+        static::deleting(function ($customer) {
+            if (Order::where('customer_id', $customer->id)->orWhere('user_id', $customer->user_id)->exists()) {
+                throw \Illuminate\Validation\ValidationException::withMessages([
+                    'customer' => 'Customer memiliki pesanan atau pembayaran dan tidak dapat dihapus. Gunakan status Nonaktif.',
+                ]);
+            }
+        });
+        static::deleted(function ($customer) {
+            // Delete the account after the unreferenced customer row is removed.
+            if ($customer->user) $customer->user->delete();
+        });
     } 
  
     protected $hidden = [ 

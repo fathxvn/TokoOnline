@@ -1,6 +1,6 @@
 @extends('v_layouts.app')
 @section('content')
-<div class="col-md-12">
+<div class="store-order">
     <div class="order-summary clearfix">
         <div class="section-title">
             <p>KERANJANG</p>
@@ -14,6 +14,7 @@
                 $totalHarga = 0;
                 $totalBerat = 0;
             @endphp
+            <div class="table-responsive">
             <table class="shopping-cart-table table">
                 <thead>
                     <tr>
@@ -66,9 +67,10 @@
                     <tr><th colspan="4">Total Berat</th><td colspan="2">{{ $totalBerat }} Gram</td></tr>
                 </tfoot>
             </table>
+            </div>
             <div class="pull-right">
-                <p>Pengiriman dan checkout belum tersedia.</p>
-                <button type="button" class="primary-btn" disabled>Pilih Pengiriman</button>
+                <p>Pembayaran dan pilihan ongkir menunggu integrasi.</p>
+                <a class="primary-btn" href="{{ route('order.checkout', $order->id) }}">Ringkasan &amp; Data Penerima</a>
             </div>
         @else
             <p>Keranjang belanja kosong.</p>

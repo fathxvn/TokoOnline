@@ -103,6 +103,113 @@ class CustomerController extends Controller
         ]);
     }
 
+    public function show(Customer $customer)
+    {
+        $customer->load('user');
+
+        return view('backend.v_customer.show', [
+            'judul' => 'Detail Customer',
+            'customer' => $customer,
+        ]);
+    }
+
+    public function edit(Customer $customer)
+    {
+        $customer->load('user');
+
+        abort_unless(
+            $customer->user && (string) $customer->user->role === '2',
+            404
+        );
+
+        return view('backend.v_customer.edit', [
+            'judul' => 'Ubah Customer',
+            'customer' => $customer,
+        ]);
+    }
+
+    public function update(Request $request, Customer $customer)
+    {
+        $customer->load('user');
+
+        abort_unless(
+            $customer->user && (string) $customer->user->role === '2',
+            404
+        );
+
+        $validated = $request->validate([
+            'nama' => ['required', 'string', 'max:255'],
+            'email' => [
+                'required',
+                'email',
+                'max:255',
+                Rule::unique('user', 'email')->ignore($customer->user_id),
+            ],
+            'hp' => ['nullable', 'string', 'regex:/^[0-9]{10,13}$/'],
+            'alamat' => ['nullable', 'string'],
+            'pos' => ['nullable', 'string', 'max:255'],
+            'status' => ['required', 'in:0,1'],
+        ], [
+            'hp.regex' => 'Nomor HP harus terdiri dari 10 sampai 13 angka.',
+        ]);
+
+        DB::transaction(function () use ($customer, $validated) {
+            $customer->user->update(
+                Arr::only($validated, ['nama', 'email', 'hp', 'status'])
+            );
+
+            $customer->update(
+                Arr::only($validated, ['alamat', 'pos'])
+            );
+        });
+
+        return redirect()
+            ->route('backend.customer.index')
+            ->with('success', 'Data customer berhasil diperbarui.');
+    }
+
+    public function destroy(Customer $customer)
+    {
+        $deleted = DB::transaction(function () use ($customer) {
+            $customer = Customer::whereKey($customer->id)
+                ->lockForUpdate()
+                ->firstOrFail();
+
+            $user = $customer->user()->lockForUpdate()->first();
+
+            abort_unless(
+                $user && (string) $user->role === '2',
+                404
+            );
+
+            $hasOrder = DB::table('order')
+                ->where('customer_id', $customer->id)
+                ->orWhere('user_id', $customer->user_id)
+                ->exists();
+
+            if ($hasOrder) {
+                return false;
+            }
+
+            $customer->delete();
+
+            return true;
+        });
+
+        if (!$deleted) {
+            return redirect()
+                ->route('backend.customer.index')
+                ->with(
+                    'msgError',
+                    'Customer memiliki data pesanan dan tidak dapat dihapus. Gunakan status Nonaktif.'
+                );
+        }
+
+        return redirect()
+            ->route('backend.customer.index')
+            ->with('success', 'Customer dan akun terkait berhasil dihapus.');
+    }
+
     public function akun($id)
     {
         abort_unless((string) $id === (string) Auth::id(), 403);

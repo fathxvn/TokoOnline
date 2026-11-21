@@ -1,5 +1,6 @@
 @extends('backend.v_layouts.app')
 @section('content')
+@if($errors->any())<div class="alert alert-danger" role="alert"><ul>@foreach($errors->all() as $message)<li>{{ $message }}</li>@endforeach</ul></div>@endif
 <!-- contentAwal -->
 
 <div class="row">
